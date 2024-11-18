@@ -1,0 +1,497 @@
+Z0044L9@THHM4G4PNY book-exchange-frontendv % 
+Z0044L9@THHM4G4PNY book-exchange-frontendv % psql -U postgres
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+postgres=# CREATE DATABASE blogdb;
+CREATE DATABASE
+postgres=# \c blogdb;
+You are now connected to database "blogdb" as user "postgres".
+blogdb=# -- Create users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
+CREATE TABLE
+blogdb=# -- Create posts table
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# -- Create comments table
+CREATE TABLE comments (
+  id SERIAL PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# -- Create likes table
+CREATE TABLE likes (
+  id SERIAL PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# 
+
+Z0044L9@THHM4G4PNY user-service % 
+Z0044L9@THHM4G4PNY user-service % psql -U postgres
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+postgres=# \c blogdb;
+You are now connected to database "blogdb" as user "postgres".
+blogdb=# \dt
+          List of relations
+ Schema |   Name   | Type  |  Owner   
+--------+----------+-------+----------
+ public | comments | table | postgres
+ public | likes    | table | postgres
+ public | posts    | table | postgres
+ public | users    | table | postgres
+(4 rows)
+
+blogdb=# \dt users
+         List of relations
+ Schema | Name  | Type  |  Owner   
+--------+-------+-------+----------
+ public | users | table | postgres
+(1 row)
+
+blogdb=# select * from users;
+ id | username | email | password 
+----+----------+-------+----------
+(0 rows)
+
+blogdb=# \d users
+                                     Table "public.users"
+  Column  |          Type          | Collation | Nullable |              Default              
+----------+------------------------+-----------+----------+-----------------------------------
+ id       | integer                |           | not null | nextval('users_id_seq'::regclass)
+ username | character varying(100) |           | not null | 
+ email    | character varying(100) |           | not null | 
+ password | character varying(255) |           | not null | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "posts" CONSTRAINT "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+blogdb=# INSERT INTO users (username, email, password) 
+VALUES ('testuser', 'testuser@example.com', 'testpassword');
+INSERT 0 1
+blogdb=# select * from users;
+ id | username |        email         |   password   
+----+----------+----------------------+--------------
+  1 | testuser | testuser@example.com | testpassword
+(1 row)
+
+blogdb=# GRANT INSERT ON TABLE users TO user;
+ERROR:  syntax error at or near "user"
+LINE 1: GRANT INSERT ON TABLE users TO user;
+                                       ^
+blogdb=# GRANT INSERT ON TABLE users TO public;
+GRANT
+blogdb=# GRANT INSERT ON TABLE users TO postgres
+blogdb-# ;
+GRANT
+blogdb=# GRANT INSERT ON TABLE users TO "POSTGRES";
+GRANT
+blogdb=# SELECT 1;
+ ?column? 
+----------
+        1
+(1 row)
+
+blogdb=# ALTER USER postgres PASSWORD 'Goodluck#27';
+ALTER ROLE
+blogdb=# ALTER USER 'POSTGRES' PASSWORD 'Goodluck#27';
+ERROR:  syntax error at or near "'POSTGRES'"
+LINE 1: ALTER USER 'POSTGRES' PASSWORD 'Goodluck#27';
+                   ^
+blogdb=# ALTER USER "POSTGRES" PASSWORD 'Goodluck#27';
+ALTER ROLE
+blogdb=# DESCRIBE users;
+ERROR:  syntax error at or near "DESCRIBE"
+LINE 1: DESCRIBE users;
+        ^
+blogdb=# \dt users;
+         List of relations
+ Schema | Name  | Type  |  Owner   
+--------+-------+-------+----------
+ public | users | table | postgres
+(1 row)
+
+blogdb=# \d users
+                                     Table "public.users"
+  Column  |          Type          | Collation | Nullable |              Default              
+----------+------------------------+-----------+----------+-----------------------------------
+ id       | integer                |           | not null | nextval('users_id_seq'::regclass)
+ username | character varying(100) |           | not null | 
+ email    | character varying(100) |           | not null | 
+ password | character varying(255) |           | not null | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "posts" CONSTRAINT "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+blogdb=# npm install bcryptjs
+^C
+blogdb=# 
+blogdb=# \du
+                                   List of roles
+ Role name |                         Attributes                         | Member of 
+-----------+------------------------------------------------------------+-----------
+ POSTGRES  |                                                            | {}
+ Z0044L9   | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+ postgres  | Superuser                                                  | {}
+
+blogdb=# CREATE ROLE "user" WITH LOGIN PASSWORD 'Goodluck#27';
+CREATE ROLE
+blogdb=# GRANT ALL PRIVILEGES ON DATABASE your_database TO "user";
+ERROR:  database "your_database" does not exist
+blogdb=# GRANT ALL PRIVILEGES ON DATABASE blogdb TO "user";
+GRANT
+blogdb=# GRANT ALL PRIVILEGES ON DATABASE your_database TO "POSTGRES";
+ERROR:  database "your_database" does not exist
+blogdb=# GRANT ALL PRIVILEGES ON DATABASE blogdb TO "POSTGRES";
+GRANT
+blogdb=#  GRANT ALL PRIVILEGES ON DATABASE blogdb TO postgres;
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE users TO "POSTGRES";
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE users TO postgres;
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON public.users TO "POSTGRES";
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON public.users TO  postgres;
+GRANT
+blogdb=# GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO  postgres;
+GRANT
+blogdb=#  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO  "POSTGRES";
+GRANT
+blogdb=# \dp users
+                                 Access privileges
+ Schema | Name  | Type  |     Access privileges     | Column privileges | Policies 
+--------+-------+-------+---------------------------+-------------------+----------
+ public | users | table | postgres=arwdDxt/postgres+|                   | 
+        |       |       | =a/postgres              +|                   | 
+        |       |       | POSTGRES=arwd/postgres    |                   | 
+(1 row)
+
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE public.users TO "user";
+GRANT
+blogdb=# GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "user";
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON public.users TO "user";
+GRANT
+blogdb=# \dt
+          List of relations
+ Schema |   Name   | Type  |  Owner   
+--------+----------+-------+----------
+ public | comments | table | postgres
+ public | likes    | table | postgres
+ public | posts    | table | postgres
+ public | users    | table | postgres
+(4 rows)
+
+blogdb=# \d posts
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | character varying(255)      |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+
+blogdb=# \dp posts
+                             Access privileges
+ Schema | Name  | Type  | Access privileges | Column privileges | Policies 
+--------+-------+-------+-------------------+-------------------+----------
+ public | posts | table |                   |                   | 
+(1 row)
+
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE public.posts to postgres;
+GRANT
+blogdb=# GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE public.posts to "POSTGRES"
+blogdb-# GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres;
+ERROR:  syntax error at or near "GRANT"
+LINE 2: GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO pos...
+        ^
+blogdb=#  \dp posts
+                                 Access privileges
+ Schema | Name  | Type  |     Access privileges     | Column privileges | Policies 
+--------+-------+-------+---------------------------+-------------------+----------
+ public | posts | table | postgres=arwdDxt/postgres |                   | 
+(1 row)
+
+blogdb=# ALTER TABLE posts ADD COLUMN author_id INT;
+ALTER TABLE
+blogdb=# ALTER TABLE posts ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES users(id);
+ALTER TABLE
+blogdb=# \d posts
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | character varying(255)      |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ author_id  | integer                     |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fk_author" FOREIGN KEY (author_id) REFERENCES users(id)
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+
+blogdb=# ALTER TABLE posts RENAME COLUMN user_id TO author_id;
+ERROR:  column "author_id" of relation "posts" already exists
+blogdb=# \d posts
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | character varying(255)      |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ author_id  | integer                     |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fk_author" FOREIGN KEY (author_id) REFERENCES users(id)
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+
+blogdb=# alter tableALTER TABLE posts
+    ALTER COLUMN user_id DROP NOT NULL,
+    ALTER COLUMN title DROP NOT NULL,
+    ALTER COLUMN content DROP NOT NULL;
+^C
+blogdb=# 
+blogdb=# ALTER TABLE posts
+    ALTER COLUMN user_id DROP NOT NULL,
+    ALTER COLUMN title DROP NOT NULL,
+    ALTER COLUMN content DROP NOT NULL;
+ALTER TABLE
+blogdb=# \d posts
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           |          | 
+ title      | character varying(255)      |           |          | 
+ content    | text                        |           |          | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ author_id  | integer                     |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fk_author" FOREIGN KEY (author_id) REFERENCES users(id)
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+
+blogdb=# select * from posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# 
+  [Restored 18 Nov 2024 at 7:40:30 AM]
+Last login: Mon Nov 18 07:40:30 on ttys000
+Restored session: Sun Nov 17 22:49:17 IST 2024
+Z0044L9@THHM4G4PNY user-service % docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED        STATUS       PORTS                    NAMES
+0288997bbc55   user-service   "docker-entrypoint.s…"   20 hours ago   Up 4 hours   0.0.0.0:3000->3000/tcp   sad_napier
+Z0044L9@THHM4G4PNY user-service % psql -U postgres                                                                                                                                                          
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+postgres=# \d
+Did not find any relations.
+postgres=# \c blogdb;
+You are now connected to database "blogdb" as user "postgres".
+blogdb=# \q
+Z0044L9@THHM4G4PNY user-service % psql -h 127.0.0.1 -p 5432 -U postgres -d blogdb
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+blogdb=# 
+  [Restored 18 Nov 2024 at 3:53:59 PM]
+Last login: Mon Nov 18 15:53:53 on console
+Restored session: Mon Nov 18 15:52:49 IST 2024
+Z0044L9@THHM4G4PNY user-service % ps -ef |grep postgres
+  501  1269     1   0  3:54PM ??         0:00.17 /opt/homebrew/opt/postgresql@15/bin/postgres -D /opt/homebrew/var/postgresql@15
+  501  1333  1269   0  3:54PM ??         0:00.01 postgres: checkpointer   
+  501  1334  1269   0  3:54PM ??         0:00.02 postgres: background writer   
+  501  1336  1269   0  3:54PM ??         0:00.01 postgres: walwriter   
+  501  1337  1269   0  3:54PM ??         0:00.03 postgres: autovacuum launcher   
+  501  1338  1269   0  3:54PM ??         0:00.00 postgres: logical replication launcher   
+  501  8453   880   0  4:10PM ttys001    0:00.00 grep postgres
+Z0044L9@THHM4G4PNY user-service % psql -U postgres -d blogdb                     
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+blogdb=# \dt
+          List of relations
+ Schema |   Name   | Type  |  Owner   
+--------+----------+-------+----------
+ public | comments | table | postgres
+ public | likes    | table | postgres
+ public | posts    | table | postgres
+ public | users    | table | postgres
+(4 rows)
+
+blogdb=# select * from posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# select * from posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# select * from posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# \d posts
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           |          | 
+ title      | character varying(255)      |           |          | 
+ content    | text                        |           |          | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ author_id  | integer                     |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fk_author" FOREIGN KEY (author_id) REFERENCES users(id)
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "comments" CONSTRAINT "comments_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    TABLE "likes" CONSTRAINT "likes_post_id_fkey" FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+
+blogdb=# ALTER TABLE posts DROP CONSTRAINT fk_author;
+-- Insert the row
+-- Re-add the constraint
+ALTER TABLE posts ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES users(id);
+ALTER TABLE
+ALTER TABLE
+blogdb=# 
+blogdb=# 
+blogdb=# SELECT * FROM users WHERE id = 1;
+ id | username |        email         |   password   
+----+----------+----------------------+--------------
+  1 | testuser | testuser@example.com | testpassword
+(1 row)
+
+blogdb=# SELECT * FROM users;
+ id |  username  |        email         |                           password                           
+----+------------+----------------------+--------------------------------------------------------------
+  1 | testuser   | testuser@example.com | testpassword
+  2 | testuser   | test@example.com     | $2a$10$IGBRC1x886az7RbkE8sm1eGhDv623/zKqZAfEIwDSINi4QUrglOP6
+  3 | vidhy      | vidhy@example.com    | $2a$10$ChTdGHHhrqOszQEhv6n8IOITjPBdyD56m1WFcOR8StgVkpCsWQZJ.
+  6 | testuser13 | test345@example.com  | $2a$10$ruWas4vzEomm0cWbByiuA.w9BNCfRgyMDr2TV0dyFgO8DBReMfNtm
+(4 rows)
+
+blogdb=# select * from posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# INSERT INTO users (id, name, ...) VALUES (1, 'Sample User', ...);
+ERROR:  syntax error at or near ".."
+LINE 1: INSERT INTO users (id, name, ...) VALUES (1, 'Sample User', ...
+                                     ^
+blogdb=# ALTER TABLE posts ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE posts ALTER COLUMN author_id SET NOT NULL;
+ERROR:  column "user_id" of relation "posts" contains null values
+ALTER TABLE
+blogdb=# 
+blogdb=# SELECT * FROM posts;
+ id | user_id |   title    |          content           |         created_at         |         updated_at         | author_id 
+----+---------+------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+(1 row)
+
+blogdb=# INSERT INTO posts (title, content, user_id, author_id)
+VALUES ('second Blog1', 'This is my 2nd blog post1', 1, 1);
+INSERT 0 1
+blogdb=# 
+  [Restored 18 Nov 2024 at 7:49:57 PM]
+Last login: Mon Nov 18 19:49:51 on console
+Restored session: Mon Nov 18 17:55:50 IST 2024
+Z0044L9@THHM4G4PNY user-service % psql -U postgres -d blogdb
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+blogdb=# SELECT * FROM posts;
+ id | user_id |    title     |          content           |         created_at         |         updated_at         | author_id 
+----+---------+--------------+----------------------------+----------------------------+----------------------------+-----------
+  7 |         | First Blog   | This is my first blog post | 2024-11-17 22:05:30.566553 | 2024-11-17 22:05:30.566553 |         1
+  8 |       1 | second Blog1 | This is my 2nd blog post1  | 2024-11-18 17:41:30.091138 | 2024-11-18 17:41:30.091138 |         1
+  9 |       2 | second Blog1 | This is my 2nd blog post1  | 2024-11-18 19:54:02.065131 | 2024-11-18 19:54:02.065131 |         2
+(3 rows)
+
+blogdb=# select * from users;
+ id |   username    |         email         |                           password                           
+----+---------------+-----------------------+--------------------------------------------------------------
+  1 | testuser      | testuser@example.com  | testpassword
+  2 | testuser      | test@example.com      | $2a$10$IGBRC1x886az7RbkE8sm1eGhDv623/zKqZAfEIwDSINi4QUrglOP6
+  3 | vidhy         | vidhy@example.com     | $2a$10$ChTdGHHhrqOszQEhv6n8IOITjPBdyD56m1WFcOR8StgVkpCsWQZJ.
+  6 | testuser13    | test345@example.com   | $2a$10$ruWas4vzEomm0cWbByiuA.w9BNCfRgyMDr2TV0dyFgO8DBReMfNtm
+  8 | testuser12345 | test12345@example.com | $2a$10$jIaviBL7nmmXuFjhMxApaebPaLfDqXodWblolpWm8FWMqEjUEmLpy
+(5 rows)
+
+blogdb=# 

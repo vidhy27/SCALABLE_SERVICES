@@ -1,0 +1,141 @@
+docker system prune -a
+docker compose up --build
+
+
+
+Z0044L9@THHM4G4PNY book-exchange-frontendv % 
+Z0044L9@THHM4G4PNY book-exchange-frontendv % psql -U postgres
+psql (15.8 (Homebrew))
+Type "help" for help.
+
+postgres=# CREATE DATABASE blogdb;
+CREATE DATABASE
+postgres=# \c blogdb;
+You are now connected to database "blogdb" as user "postgres".
+blogdb=# -- Create users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
+CREATE TABLE
+blogdb=# -- Create posts table
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# -- Create comments table
+CREATE TABLE comments (
+  id SERIAL PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# -- Create likes table
+CREATE TABLE likes (
+  id SERIAL PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE
+blogdb=# 
+
+Z0044L9@THHM4G4PNY SCALABLE_SERVICE % cd bl*   
+Z0044L9@THHM4G4PNY blogging-platform % docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                    NAMES
+0288997bbc55   user-service   "docker-entrypoint.s…"   31 minutes ago   Up 31 minutes   0.0.0.0:3000->3000/tcp   sad_napier
+Z0044L9@THHM4G4PNY blogging-platform % docker stop 0288997bbc55
+0288997bbc55
+Z0044L9@THHM4G4PNY blogging-platform % docker start 0288997bbc55
+
+0288997bbc55
+Z0044L9@THHM4G4PNY blogging-platform % docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS         PORTS                    NAMES
+0288997bbc55   user-service   "docker-entrypoint.s…"   34 minutes ago   Up 4 seconds   0.0.0.0:3000->3000/tcp   sad_napier
+Z0044L9@THHM4G4PNY blogging-platform % curl -X POST http://localhost:3001/register -H "Content-Type: application/json" -d '{"username": "testuser1", "email": "testuser1@example.com", "password": "testpassword1"}'
+{"message":"Error registering user"}%                                                                                                                                                                                                                Z0044L9@THHM4G4PNY blogging-platform % 
+
+
+docker build -t user-service .
+
+1. Build the Docker Image (if you haven't already):
+docker build -t user-service ./user-service
+
+docker build -t post-service ./post-service
+2. Run the Docker Container:
+
+docker run -d --name user-service -p 3001:3001 user-service
+
+docker run -d --name post-service -p 3002:3002 post-service
+
+
+3.verify:
+docker ps
+
+4.stop: docker stop user-service
+
+5.remove:docker rm user-service
+
+validation:
+
+docker ps -a
+docker stop post-service
+docker rm post-service
+docker run -d --name post-service -p 3002:3002 post-service
+
+
+curl -X POST http://localhost:3001/user/register -d '{"username": "testuser", "email": "test@example.com", "password": "password123"}' -H "Content-Type: application/json"
+
+docker ps  # List running containers to get the container ID or name
+docker stop <container_id_or_name>  # Replace <container_id_or_name> with the actual ID or name of the container
+
+docker stop $(docker ps -q)  # Stop all containers
+
+
+docker start 0288997bbc55
+
+
+docker start -i 0288997bbc55
+docker ps
+
+
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS          PORTS                    NAMES
+aab1717a9884   postgres       "docker-entrypoint.s…"   3 minutes ago   Up 3 minutes    0.0.0.0:5432->5432/tcp   post-service-postgres-1
+0288997bbc55   user-service   "docker-entrypoint.s…"   21 hours ago    Up 19 minutes   0.0.0.0:3000->3000/tcp   sad_napier
+Z0044L9@THHM4G4PNY post-service % 
+
+
+Z0044L9@THHM4G4PNY post-service % docker ps
+CONTAINER ID   IMAGE                       COMMAND                  CREATED         STATUS          PORTS                    NAMES
+b4956509d21d   post-service-post-service   "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes    0.0.0.0:3002->3002/tcp   post-service-post-service-1
+ca34535db5af   postgres:13                 "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes    5432/tcp                 post-service-db-1
+0288997bbc55   user-service                "docker-entrypoint.s…"   21 hours ago    Up 40 minutes   0.0.0.0:3000->3000/tcp   sad_napier
+Z0044L9@THHM4G4PNY post-service % 
+
+
+
+curl -X POST http://localhost:3001/user/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser11", "email": "testuser11@example.com", "password": "testpassword"}'
+
+
+curl -X POST http://localhost:3001/user/register -d '{"username": "testuser", "email": "test@example.com", "password": "password123"}' -H "Content-Type: application/json"
+
+Z0044L9@THHM4G4PNY post-service % curl -X POST http://localhost:3002/post -d '{"title": "second Blog1", "content": "This is my 2nd blog post1", "user_id": 1, "author_id": 1}' -H "Content-Type: application/json"
+
+{"message":"Post created successfully","post":{"id":7,"user_id":null,"title":"First Blog","content":"This is my first blog post","created_at":"2024-11-17T16:35:30.566Z","updated_at":"2024-11-17T16:35:30.566Z","author_id":1}}POST /post 201 12.381 ms - 224
+Z0044L9@THHM4G4PNY post-service % 
