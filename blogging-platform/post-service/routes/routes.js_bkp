@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+const { Pool } = require('pg');
+
+// Initialize the PostgreSQL connection pool
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'blogdb',
+  password: 'Goodluck#27', // Ensure this matches your DB password
+  port: 5432,
+});
+
+// POST route to create a new post
+router.post('/post', async (req, res) => {
+  const { title, content, user_id, author_id } = req.body;
+
+  // Insert the post into the database
+  try {
+    const result = await pool.query(
+      'INSERT INTO posts (title, content, user_id, author_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *',
+      [title, content, user_id, author_id]
+    );
+    res.json({
+      message: 'Post created successfully',
+      post: result.rows[0], // Return the inserted post details
+    });
+  } catch (err) {
+    console.error('Error inserting post:', err);
+    res.status(500).json({ message: 'Error creating post' });
+  }
+});
+
+module.exports = router;
+

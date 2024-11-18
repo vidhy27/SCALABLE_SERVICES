@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  user-service:
+    build:
+      context: ./user-service
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres` 
+      DB_PASSWORD:Goodluck#27 
+      DB_NAME:blogdb 
+    depends_on:
+      - db
+
+  post-service:
+    build:
+      context: ./post-service
+    ports:
+      - "3002:3002"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres 
+      DB_PASSWORD: Goodluck#27 
+      DB_NAME: blogdb 
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: Goodluck#27 
+      POSTGRES_DB:blogdb 
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  post-service:
+    container_name: post_service
+    build:
+      context: .
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env  # Reference the .env file
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "Goodluck#27"
+      POSTGRES_DB: blogdb
+
+volumes:
+  db_data:
+

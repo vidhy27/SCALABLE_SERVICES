@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  post-service:
+    build:
+      context: . # Current directory
+    ports:
+      - "3002:3002"  # Expose port 3002 to access the service locally
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/blogdb  # Point to the PostgreSQL container
+    depends_on:
+      - db  # Make sure db starts before post-service
+
+  db:
+    image: postgres:13  # Use official PostgreSQL image
+    volumes:
+      - db_data:/var/lib/postgresql/data  # Store data in a Docker volume
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blogdb
+
+volumes:
+  db_data:
+

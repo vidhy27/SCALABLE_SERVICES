@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  user-service:
+    container_name: user_service  # Rename container here
+    build:
+      context: ./user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/blogdb
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blogdb
+
+volumes:
+  db_data:
+
