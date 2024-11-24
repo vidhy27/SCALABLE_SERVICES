@@ -23,8 +23,7 @@ It demonstrates how to design and implement a scalable, maintainable application
 - **Like Service**: Enables users to like or unlike posts and keeps track of the number of likes per post.
     - Link to Repo: https://github.com/freakcap/LikeMicroservice
 - **API Gateway**: Acts as a single entry point to the system, routing client requests to the appropriate services and handling cross-cutting concerns like authentication and logging.
-    - Link to Repo: https://git.foss.life/axel/ss-assignment-api-gateway
-
+    - Link to Repo: https://github.com/vidhy27/SCALABLE_SERVICES/blob/main/ss-assignment-api-gateway.zip
 Services communicate with each other using synchronous HTTP/REST calls. Authentication is managed using JSON Web Tokens (JWT), with the API Gateway centralizing authentication and authorization to ensure secure and consistent access control across all services.
 
 This application serves as a foundation for building complex, distributed systems and can be extended with additional features and services as needed.
