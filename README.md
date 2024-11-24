@@ -10,7 +10,7 @@ DATABASE: POSTGRESQL,MONGO**
 
 This project is a microservices-based blogging platform.
 
-It demonstrates how to design and implement a scalable, maintainable application using a microservices architecture. 
+It demonstrates how to design and implement a scalable, maintainable application using a microservices architecture. I also integrated user & post service using Docker compose.
 
 **The platform consists of the following services:**
 
